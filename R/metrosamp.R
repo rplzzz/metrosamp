@@ -94,9 +94,11 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale, debug=FALSE, lp0=NA)
             samplp[i] <- lpost(batchmean)     # give us the actual log posterior for the batch average params
             accept[i] <- mean(batch$accept)
             ## just set the proposal to whatever the last proposal was
-            prop[i,] <- batch$proposals[batchlen,]
-            proplp[i] <- batch$proplp[batchlen]
-            ratio[i] <- batch$ratio[batchlen]
+            if(debug) {
+                prop[i,] <- batch$proposals[batchlen,]
+                proplp[i] <- batch$proplp[batchlen]
+                ratio[i] <- batch$ratio[batchlen]
+            }
         }
     }
     paccept <- sum(accept)/nsamp
