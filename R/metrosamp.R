@@ -1,0 +1,110 @@
+
+#' Perform Metropolis sampling with batch averaging
+#'
+#' This function performs a basic Metropolis sampling of a user-supplied
+#' log-posterior function.  The sampling is done in batches, with the batch
+#' means returned as the output.  Setting the batch length to 1 will produce
+#' unbatched samples.
+#'
+#' The output structure will be a list with the following elements:
+#' \describe{
+#' \item{samples}{Matrix (nsamp x nparam) of parameter samples}
+#' \item{samplp}{Vector (nsamp) of log-posterior values for the samples}
+#' \item{accept}{Probability of accepting a proposal, averaged across all
+#' samples}
+#' \item{plast}{Last parameter set.  Can be used to continue sampling where the
+#' last run left off.}
+#' \item{scale}{Scale factor used in the calculation.  Also useful for
+#' continuing a run.}
+#' }
+#' If the \code{debug} flag is set, the output will have some additional
+#' elements that can be used to diagnose the sampling procedure.  If batch
+#' sampling is in use, then most of these will pertain to the \emph{last}
+#' proposal evaluated in each batch.  Intermediate proposals within a batch are
+#' not returned.  Therefore, when debugging proposals, it is best to use a batch
+#' length of 1.
+#' \describe{
+#' \item{proposals}{The proposal parameters evaluated by the sampler.}
+#' \item{proplp}{Log-posterior for the proposals.  The same notes apply as to
+#' the \code{proposals} entry.}
+#' \item{prop_accepted}{Flag indicating whether each proposal was accepted.}
+#' }
+#'
+#' @section To Do:
+#'
+#' \itemize{
+#' \item{Add code to compute MCSE.}
+#' \item{Add code to compute Neff.}
+#' \item{Add option to run functions on MC samples.}
+#' \item{Allow covariance matrix for scale parameter.}
+#' }
+#'
+#' @param lpost Log-posterior function
+#' @param p0 Starting parameters for sampling
+#' @param nsamp Number of batches to run
+#' @param batchlen Number of samples per batch
+#' @param scale MC step scaler; this will be multiplied by a vector of standard
+#'   normal deviates to get the proposal step.
+#' @param debug Flag to turn on additional debugging information.
+#' @param lp0 Log-posterior for the starting parameters (p0).  If not supplied
+#'   it will be calculated automatically.
+#' @return A list of Monte Carlo outputs (described in Details).
+#' @export
+metrosamp <- function(lpost, p0, nsamp, batchlen, scale, debug=FALSE, lp0=NA)
+{
+    nvar <- length(p0)
+
+    samples <- matrix(nrow=nsamp, ncol=length(p0))
+    prop <- matrix(nrow=nsamp, ncol=length(p0))
+    proplp <- as.numeric(rep(NA, nsamp))
+    samplp <- as.numeric(rep(NA, nsamp))
+    ratio <- as.numeric(rep(NA, nsamp))
+    accept <- rep(0, nsamp)
+
+    current_samp <- p0
+    if(is.na(lp0)) {
+        current_lp <- lpost(p0)
+    }
+    else {
+        current_lp <- lp0
+    }
+    for(i in 1:nsamp) {
+        if(batchlen == 1) {
+            prop[i,] <- current_samp + scale*rnorm(nvar, 0, 1.0)
+            proplp[i] <- lpost(prop[i,])
+            ratio[i] <- exp(proplp[i] - current_lp)
+            if(runif(1) < ratio[i]) {
+                ## Accept proposal params
+                samples[i,] <- current_samp <- prop[i,]
+                samplp[i] <- current_lp <- proplp[i]
+                accept[i] <- 1
+            }
+            else {
+                ## reject proposal params
+                samples[i,] <- current_samp
+                samplp[i] <- current_lp
+            }
+        }
+        else {
+            ## sample a batch
+            message('batch: ', i)
+            batch <- metrosamp(lpost, current_samp, batchlen, 1, scale, debug, current_lp)
+            ## set this iteration's result using the result of the batch
+            samples[i,] <- batchmean <- apply(batch$samples, 2, mean)
+            samplp[i] <- lpost(batchmean)     # give us the actual log posterior for the batch average params
+            accept[i] <- mean(batch$accept)
+            ## just set the proposal to whatever the last proposal was
+            prop[i,] <- batch$proposals[batchlen,]
+            proplp[i] <- batch$proplp[batchlen]
+            ratio[i] <- batch$ratio[batchlen]
+        }
+    }
+    paccept <- sum(accept)/nsamp
+    if(debug) {
+        list(samples=samples, proposals=prop, proplp=proplp, samplp=samplp, ratio=ratio,
+             prop_accepted=accept, accept=paccept, plast=samples[nsamp,], scale=scale)
+    }
+    else {
+        list(samples=samples, samplp=samplp, accept=paccept, plast=samples[nsamp,], scale=scale)
+    }
+}
