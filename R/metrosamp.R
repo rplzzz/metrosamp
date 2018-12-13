@@ -39,6 +39,8 @@
 #' @section To Do:
 #'
 #' \itemize{
+#' \item{Store the last log-posterior value, so continuation runs don't have to
+#' recompute it.}
 #' \item{Add code to compute MCSE.}
 #' \item{Add code to compute Neff.}
 #' \item{Add option to run functions on MC samples.}
