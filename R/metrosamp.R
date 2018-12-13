@@ -103,10 +103,14 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale, debug=FALSE, lp0=NA)
     }
     paccept <- sum(accept)/nsamp
     if(debug) {
-        list(samples=samples, proposals=prop, proplp=proplp, samplp=samplp, ratio=ratio,
-             prop_accepted=accept, accept=paccept, plast=samples[nsamp,], scale=scale)
+        structure(
+            list(samples=samples, proposals=prop, proplp=proplp, samplp=samplp, ratio=ratio,
+                 prop_accepted=accept, accept=paccept, plast=samples[nsamp,], scale=scale),
+            class=c('metrosamp', 'list'))
     }
     else {
-        list(samples=samples, samplp=samplp, accept=paccept, plast=samples[nsamp,], scale=scale)
+        structure(
+            list(samples=samples, samplp=samplp, accept=paccept, plast=samples[nsamp,], scale=scale),
+            class=c('metrosamp','list'))
     }
 }

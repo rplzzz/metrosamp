@@ -62,6 +62,7 @@ the \code{proposals} entry.}
 
 \itemize{
 \item{Add code to compute MCSE.}
+\item{Add code to compute Neff.}
 \item{Add option to run functions on MC samples.}
 \item{Allow covariance matrix for scale parameter.}
 }
