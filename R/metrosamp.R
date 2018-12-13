@@ -6,7 +6,7 @@
 #' means returned as the output.  Setting the batch length to 1 will produce
 #' unbatched samples.
 #'
-#' The output structure will be a list with the following elements:
+#' The output \code{metrosamp} structure will be a list with the following elements:
 #' \describe{
 #' \item{samples}{Matrix (nsamp x nparam) of parameter samples}
 #' \item{samplp}{Vector (nsamp) of log-posterior values for the samples}
@@ -30,6 +30,12 @@
 #' \item{prop_accepted}{Flag indicating whether each proposal was accepted.}
 #' }
 #'
+#' A run can be continued by passing the \code{metrosamp} structure from the
+#' previous run as the \code{p0} argument.  If this is done, then the
+#' \code{scale} parameter may be omitted, and the new run will use the same
+#' scale as the old.  If a scale parameter \emph{is} supplied, then it will
+#' override the scale parameter stored in the old structure.
+#'
 #' @section To Do:
 #'
 #' \itemize{
@@ -40,18 +46,32 @@
 #' }
 #'
 #' @param lpost Log-posterior function
-#' @param p0 Starting parameters for sampling
+#' @param p0 Starting parameters for sampling, OR a \code{metrosamp} structure
+#' from a previous run.
 #' @param nsamp Number of batches to run
 #' @param batchlen Number of samples per batch
 #' @param scale MC step scaler; this will be multiplied by a vector of standard
-#'   normal deviates to get the proposal step.
+#' normal deviates to get the proposal step.  Optional if a \code{metrosamp}
+#' structure was supplied for \code{p0}; required otherwise.
 #' @param debug Flag to turn on additional debugging information.
 #' @param lp0 Log-posterior for the starting parameters (p0).  If not supplied
 #'   it will be calculated automatically.
-#' @return A list of Monte Carlo outputs (described in Details).
+#' @return A \code{metrosamp} structure of Monte Carlo outputs (described in Details).
 #' @export
-metrosamp <- function(lpost, p0, nsamp, batchlen, scale, debug=FALSE, lp0=NA)
+metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=NA)
 {
+
+    if(inherits(p0, 'metrosamp')) {
+        if(is.null(scale)) {
+            ## only use the old run's scale if no scale was supplied
+            scale <- p0$scale
+        }
+        p0 <- p0$plast
+    }
+
+    assertthat::assert_that(!is.null(scale),
+                            msg='If p0 is not a metrosamp object, then scale must be supplied.')
+
     nvar <- length(p0)
 
     samples <- matrix(nrow=nsamp, ncol=length(p0))

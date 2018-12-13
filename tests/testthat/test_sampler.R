@@ -72,6 +72,36 @@ test_that('Increasing the proposal scale decreases acceptance probability.', {
     expect_lt(out2$accept, out1$accept)
 })
 
+
+test_that('Continuation runs work.', {
+    set.seed(8675309)
+    out1 <- metrosamp(normpost, rep(1, nvar) , 1000, 1, rep(1, nvar))
+
+    ## continue with same scale
+    set.seed(8675309)
+    out2 <- metrosamp(normpost, out1, 1000, 1)
+    ## Check tht we get valid output
+    expect_s3_class(out1,'metrosamp')
+    expect_is(out1$samples, 'matrix')
+    expect_equal(dim(out1$samples), c(nsamp, nvar))
+
+    expect_true(is.vector(out1$samplp))
+    expect_equal(length(out1$samplp), nsamp)
+
+    expect_equal(out1$scale, out2$scale)
+
+    ## Try overriding the scale
+    set.seed(8675309)
+    out3 <- metrosamp(normpost, out2, 1000, 1, rep(0.5, nvar))
+    expect_gt(out3$accept, out1$accept)
+    expect_gt(out3$accept, out2$accept)
+
+    ## Check that omitting the scale produces an error if it's not a
+    ## continuation run.
+    expect_error(metrosamp(normpost, rep(1, nvar), 1000, 1))
+})
+
+
 test_that('Sampling a simple posterior produces the expected distribution.', {
     set.seed(8675309)
     out <- metrosamp(normpost, rep(1, nvar), 1000, 10, rep(1,nvar))

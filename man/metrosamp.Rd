@@ -4,19 +4,22 @@
 \alias{metrosamp}
 \title{Perform Metropolis sampling with batch averaging}
 \usage{
-metrosamp(lpost, p0, nsamp, batchlen, scale, debug = FALSE, lp0 = NA)
+metrosamp(lpost, p0, nsamp, batchlen, scale = NULL, debug = FALSE,
+  lp0 = NA)
 }
 \arguments{
 \item{lpost}{Log-posterior function}
 
-\item{p0}{Starting parameters for sampling}
+\item{p0}{Starting parameters for sampling, OR a \code{metrosamp} structure
+from a previous run.}
 
 \item{nsamp}{Number of batches to run}
 
 \item{batchlen}{Number of samples per batch}
 
 \item{scale}{MC step scaler; this will be multiplied by a vector of standard
-normal deviates to get the proposal step.}
+normal deviates to get the proposal step.  Optional if a \code{metrosamp}
+structure was supplied for \code{p0}; required otherwise.}
 
 \item{debug}{Flag to turn on additional debugging information.}
 
@@ -24,7 +27,7 @@ normal deviates to get the proposal step.}
 it will be calculated automatically.}
 }
 \value{
-A list of Monte Carlo outputs (described in Details).
+A \code{metrosamp} structure of Monte Carlo outputs (described in Details).
 }
 \description{
 This function performs a basic Metropolis sampling of a user-supplied
@@ -33,7 +36,7 @@ means returned as the output.  Setting the batch length to 1 will produce
 unbatched samples.
 }
 \details{
-The output structure will be a list with the following elements:
+The output \code{metrosamp} structure will be a list with the following elements:
 \describe{
 \item{samples}{Matrix (nsamp x nparam) of parameter samples}
 \item{samplp}{Vector (nsamp) of log-posterior values for the samples}
@@ -56,6 +59,12 @@ length of 1.
 the \code{proposals} entry.}
 \item{prop_accepted}{Flag indicating whether each proposal was accepted.}
 }
+
+A run can be continued by passing the \code{metrosamp} structure from the
+previous run as the \code{p0} argument.  If this is done, then the
+\code{scale} parameter may be omitted, and the new run will use the same
+scale as the old.  If a scale parameter \emph{is} supplied, then it will
+override the scale parameter stored in the old structure.
 }
 \section{To Do}{
 
