@@ -57,6 +57,7 @@
 #' @param lp0 Log-posterior for the starting parameters (p0).  If not supplied
 #'   it will be calculated automatically.
 #' @return A \code{metrosamp} structure of Monte Carlo outputs (described in Details).
+#' @importFrom stats runif rnorm
 #' @export
 metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=NA)
 {
