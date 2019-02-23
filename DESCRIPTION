@@ -1,7 +1,7 @@
 Package: metrosamp
 Type: Package
 Title: Basic Metropolis Sampler for Markov Chain Monte Carlo
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person("Robert", "Link", email = "robert.link@pnnl.gov", role = c("aut", "cre"))
 Description: Run basic Markov Chain Monte Carlo using the Metropolis algorithm.
 Depends: R (>= 3.3.0)
@@ -10,5 +10,6 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
 Imports:
-	assertthat (>= 0.2.0)
+	assertthat (>= 0.2.0),
+	coda (>= 0.19),
 Suggests: testthat

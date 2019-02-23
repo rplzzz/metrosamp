@@ -2,6 +2,7 @@
 
 export(logrosen)
 export(metrosamp)
+export(neff)
 export(normpost)
 export(rosenbrock)
 export(scltune)
