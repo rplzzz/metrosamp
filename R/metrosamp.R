@@ -78,7 +78,9 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
     nvar <- length(p0)
 
     samples <- matrix(nrow=nsamp, ncol=length(p0))
+    colnames(samples) <- names(p0)
     prop <- matrix(nrow=nsamp, ncol=length(p0))
+    colnames(prop) <- names(p0)
     proplp <- as.numeric(rep(NA, nsamp))
     samplp <- as.numeric(rep(NA, nsamp))
     ratio <- as.numeric(rep(NA, nsamp))
@@ -93,12 +95,13 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
     }
     for(i in 1:nsamp) {
         if(batchlen == 1) {
-            prop[i,] <- current_samp + scale*rnorm(nvar, 0, 1.0)
-            proplp[i] <- lpost(prop[i,])
+            newprop <- current_samp + scale*rnorm(nvar, 0, 1.0)
+            prop[i,] <- newprop
+            proplp[i] <- lpost(newprop)
             ratio[i] <- exp(proplp[i] - current_lp)
             if(runif(1) < ratio[i]) {
                 ## Accept proposal params
-                samples[i,] <- current_samp <- prop[i,]
+                samples[i,] <- current_samp <- newprop
                 samplp[i] <- current_lp <- proplp[i]
                 accept[i] <- 1
             }
@@ -124,16 +127,17 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
             }
         }
     }
+
     paccept <- sum(accept)/nsamp
     if(debug) {
         structure(
             list(samples=samples, proposals=prop, proplp=proplp, samplp=samplp, ratio=ratio,
-                 prop_accepted=accept, accept=paccept, plast=samples[nsamp,], scale=scale),
+                 prop_accepted=accept, accept=paccept, plast=current_samp, scale=scale),
             class=c('metrosamp', 'list'))
     }
     else {
         structure(
-            list(samples=samples, samplp=samplp, accept=paccept, plast=samples[nsamp,], scale=scale),
+            list(samples=samples, samplp=samplp, accept=paccept, plast=current_samp, scale=scale),
             class=c('metrosamp','list'))
     }
 }

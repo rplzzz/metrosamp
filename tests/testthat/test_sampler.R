@@ -16,6 +16,8 @@ test_that('Unbatched sampling works.', {
     expect_true(is.vector(out$samplp))
     expect_equal(length(out$samplp), nsamp)
 
+    expect_equivalent(out$samples[nsamp,], out$plast)
+
     ## Check debug info is NOT included
     expect_false('proposals' %in% names(out))
     expect_false('proplp' %in% names(out))
@@ -120,4 +122,34 @@ test_that('Sampling a simple posterior produces the expected distribution.', {
     ## them a little bit of slack for these automated tests.
     tol <- tol*1.25
     expect_equal(distsd, rep(0.25, nvar), tolerance=tol)
+})
+
+test_that('Sampler preserves attributes', {
+    vn <- c('a','b','c','d')
+    lpost <- function(p) {
+        stopifnot(!is.null(names(p)) && all(names(p) == vn))
+        stopifnot(!is.null(attr(p, 'bogon flux')) && attr(p, 'bogon flux') == 0.0)
+        -sum((p - c(1.0,2.0,3.0,4.0))^2)
+    }
+
+    p0 <- c(1.0,2.0,3.0,4.0)
+    sig <- rep(1,4)
+    expect_error({
+        metrosamp(lpost, p0, 100, 1, sig)
+    })
+    names(p0) <- vn
+    expect_error({
+        metrosamp(lpost, p0, 100, 1, sig)
+    })
+    attr(p0, 'bogon flux') <- 2.5   # Nonzero bogon flux!
+    expect_error({
+        metrosamp(lpost, p0, 100, 1, sig)
+    })
+    attr(p0, 'bogon flux') <- 0.0   # Bogon flux nominal
+    expect_silent({
+        ms <- metrosamp(lpost, p0, 100, 1, sig)
+    })
+    expect_silent({
+        ms2 <- metrosamp(lpost, ms, 100, 1)
+    })
 })
