@@ -27,8 +27,7 @@ test_that('Unbatched sampling works.', {
 })
 
 
-test_that('Debug information is added when requested.',
-      {
+test_that('Debug information is added when requested.', {
     out <- metrosamp(normpost, rep(1, nvar), 1000, 1, rep(1,nvar), debug=TRUE)
 
     expect_s3_class(out,'metrosamp')
@@ -72,6 +71,36 @@ test_that('Increasing the proposal scale decreases acceptance probability.', {
     out2 <- metrosamp(normpost, rep(1, nvar), 1000, 1, 4*scl)
 
     expect_lt(out2$accept, out1$accept)
+})
+
+test_that('Correlation matrix for proposals works.', {
+    set.seed(867-5309)
+    ## run an uncorrelated version for comparison
+    scl_uncor <- rep(1, nvar)
+    out1 <- metrosamp(normpost, rep(1,nvar), 1000, 1, scl_uncor, debug=TRUE)
+    expect_lt(cor(out1$proposals)[1,2], 0.1)   ## proposal correlation should be small
+
+    scl_cor <- diag(nrow=nvar, ncol=nvar)
+    scl_cor[1,2] <- scl_cor[2,1] <- 0.9
+    out2 <- metrosamp(normpost, rep(1, nvar), 1000, 1, scl_cor, debug=TRUE)
+    ## The proposals entry in the output gives us the actual proposals, not the
+    ## proposal steps.  Because the proposals are influenced by the posterior, which
+    ## is symmetric, they will not be as correlated as the step distribution.  Still,
+    ## they should be noticeably more correlated than the uncorrelated version.
+    expect_gt(cor(out2$proposals)[1,2], 0.7)
+    ## The correlated version should also accept more often.  This is a bit counterintuitive,
+    ## but the important thing here is that the correlation doesn't increase the scale, along
+    ## the major axis (relative to the uncorrelated version), but it _does_ decrease it
+    ## along the minor axis.  Therefore, the samples must be more concentrated near the center.
+    ## Given our symmetric posterior, this will lead to higher acceptance rates.
+    expect_gt(out2$accept, out1$accept)
+
+    ## Now check that scaling the correlated step size larger does decrease the acceptance rate.
+    sclfac <- rep(2,nvar)
+    sclfac[1] <- 3   # make it asymmetric
+    scl_cor2 <- cor2cov(scl_cor, sclfac)
+    out3 <- metrosamp(normpost, rep(1, nvar), 1000, 1, scl_cor2)
+    expect_lt(out3$accept, out2$accept)
 })
 
 
@@ -148,6 +177,21 @@ test_that('Sampler preserves attributes', {
     attr(p0, 'bogon flux') <- 0.0   # Bogon flux nominal
     expect_silent({
         ms <- metrosamp(lpost, p0, 100, 1, sig)
+    })
+    expect_silent({
+        ms2 <- metrosamp(lpost, ms, 100, 1)
+    })
+
+    ## try it again with a correlated proposal step
+    sigmat <- diag(nrow=4, ncol=4)
+    sigmat[1,2] <- sigmat[2,1] <- 0.9
+    attr(p0, 'bogon flux') <- 2.5
+    expect_error({
+        metrosamp(lpost, p0, 100, 1, sigmat)
+    })
+    attr(p0, 'bogon flux') <- 0.0
+    expect_silent({
+        ms <- metrosamp(lpost, p0, 100, 1, sigmat)
     })
     expect_silent({
         ms2 <- metrosamp(lpost, ms, 100, 1)

@@ -43,3 +43,29 @@ neff <- function(samps)
 {
     coda::effectiveSize(samps)
 }
+
+#' Convert a correlaiton matrix into a covariance matrix
+#'
+#' Given a correlation matrix an a vector of standard deviations for the individual
+#' variables, produce a covariance matrix.
+#'
+#' This is a convenience function, meant for producing covariance matrices for
+#' proposal distributions in cases where you have an idea of what the correlation
+#' should be, and you want to specify the scale independently.  No checks are
+#' performed to see, for example, whether the correlation matrix is valid.
+#'
+#' @param cormat Correlation matrix
+#' @param scales Vector of scale factors (i.e., standard deviations)
+#' @export
+cor2cov <- function(cormat, scales)
+{
+    assertthat::assert_that(is.matrix(cormat))
+    assertthat::assert_that(is.vector(scales))
+    assertthat::assert_that(nrow(cormat) == ncol(cormat))
+    assertthat::assert_that(nrow(cormat) == length(scales))
+
+    ## We do this with two calls to sweep.  One gets the rows, the other
+    ## gets the columns
+    out <- sweep(cormat, 1, scales, "*", check.margin=FALSE)
+    sweep(out, 2, scales, "*", check.margin=FALSE)
+}
