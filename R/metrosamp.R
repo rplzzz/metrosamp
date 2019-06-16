@@ -75,7 +75,6 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
     assertthat::assert_that(!is.null(scale),
                             msg='If p0 is not a metrosamp object, then scale must be supplied.')
 
-    nvar <- length(p0)
 
     samples <- matrix(nrow=nsamp, ncol=length(p0))
     colnames(samples) <- names(p0)
@@ -95,7 +94,7 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
     }
     for(i in 1:nsamp) {
         if(batchlen == 1) {
-            newprop <- current_samp + scale*rnorm(nvar, 0, 1.0)
+            newprop <- current_samp + proposal_step(scale)
             prop[i,] <- newprop
             proplp[i] <- lpost(newprop)
             ratio[i] <- exp(proplp[i] - current_lp)
@@ -139,5 +138,19 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
         structure(
             list(samples=samples, samplp=samplp, accept=paccept, plast=current_samp, scale=scale),
             class=c('metrosamp','list'))
+    }
+}
+
+## proposal generation function
+## scale can be either a vector of scale factors or a covariance matrix
+proposal_step <- function(scale)
+{
+    if(is.matrix(scale)) {
+        nvar <- nrow(scale)
+        MASS::mvrnorm(1, mu=rep(0,nvar), Sigma=scale)
+    }
+    else {
+        nvar <- length(scale)
+        scale*rnorm(nvar, 0, 1.0)
     }
 }
