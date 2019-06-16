@@ -1,7 +1,7 @@
 comment:
-  - layout: "reach,diff,files"
-  - behavior: default
-  - require_changes: true
+  layout: "reach, diff, files"
+  behavior: default
+  require_changes: true
 
 ignore:
   - "R/scltune.R"
