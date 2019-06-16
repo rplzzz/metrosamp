@@ -4,5 +4,5 @@ comment:
   - require_changes: true
 
 ignore:
-  - "scltune.R"
-  - "testfuns.R"
+  - "R/scltune.R"
+  - "R/testfuns.R"
