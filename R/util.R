@@ -69,3 +69,75 @@ cor2cov <- function(cormat, scales)
     out <- sweep(cormat, 1, scales, "*", check.margin=FALSE)
     sweep(out, 2, scales, "*", check.margin=FALSE)
 }
+
+
+#' Concatenate metrosamp objects from continuation runs into a single object
+#'
+#' This function takes \code{\link{metrosamp}} objects from an initial run and
+#' metrosamp objects from a continuation run and combines them into a single
+#' metrosamp object for the entire collection of iterations.  The arguments can
+#' be either two individual metrosamp objects, or two lists of metrosamp
+#' objects.  In the latter case, the objects are concatenated pairwise to
+#' produce a list of objects for the concatenated runs.
+#'
+#' Debuggging information from the runs is kept if it is present in both
+#' objects; otherwise it is dropped.
+#'
+#' The intent of this function is to concatenate runs with subsequent runs that
+#' started where the first run left off, but no check is made to ensure that the
+#' second run really is a continuation of the first.  Concatenating two runs
+#' that aren't continuations may result in an error, or in bogus results.
+#'
+#' @param mslist1 First metrosamp object or list of metrosamp objects to concatenate.
+#' @param mslist2 Second metrosamp object or list of metrosamp objects to concatenate.
+#' @return A metrosamp object, or a list of metrosamp objects, representing the concatenated runs.
+#' @export
+concat <- function(mslist1, mslist2)
+{
+    if(inherits(mslist1, 'metrosamp') && inherits(mslist2, 'metrosamp')) {
+        ## Got individual metrosamp objects instead of mslists.  Return the
+        ## two objects, concatenated
+        concat_single(mslist1, mslist2)
+    }
+    else {
+        ## Concatenate term by term
+        mapply(concat_single, mslist1, mslist2, SIMPLIFY = FALSE)
+    }
+}
+
+## Helper function for concatenate function.
+concat_single <- function(ms1, ms2)
+{
+    assertthat::assert_that(inherits(ms1, 'metrosamp'))
+    assertthat::assert_that(inherits(ms2, 'metrosamp'))
+
+    nsamp1 <- nrow(ms1$samples)
+    nsamp2 <- nrow(ms2$samples)
+    nsamptot <- nsamp1 + nsamp2
+
+    ## Deal with the items that are always present
+    samps <- rbind(ms1$samples, ms2$samples)
+    samplp <- c(ms1$samplp, ms2$samplp)
+    paccept <- (nsamp1*ms1$accept + nsamp2*ms2$accept) / nsamptot
+    plast <- ms2$plast
+    scale <- ms2$scale
+
+    ## Check to see if debugging is on in _both_ objects.  Debugging information
+    ## only makes sense if it was turned on all the way through, so drop it if it's
+    ## missing in _either_ object.
+    if('proposals' %in% names(ms1) && 'proposals' %in% names(ms2)) {
+        props <- rbind(ms1$proposals, ms2$proposals)
+        proplp <- c(ms1$proplp, ms2$proplp)
+        ratio <- c(ms1$ratio, ms2$ratio)
+        prop_accept <- c(ms1$prop_accepted, ms2$prop_accepted)
+        structure(
+            list(samples=samps, samplp=samplp, accept=paccept, plast=plast, scale=scale,
+                 proposals=props, proplp=proplp, ratio=ratio, prop_accepted=prop_accept),
+            class=c('metrosamp', 'list'))
+    }
+    else {
+        structure(
+            list(samples=samps, samplp=samplp, accept=paccept, plast=plast, scale=scale),
+            class=c('metrosamp', 'list'))
+    }
+}

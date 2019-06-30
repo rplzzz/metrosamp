@@ -75,7 +75,7 @@ scltune <- function(lpost, p0, scl_guess=NULL, target_accept=0.25, nsamp=100)
     objfun <- create_objfunc(lpost, sampobj, nsamp, target_accept)
 
     ## Run the minimization
-    optrslt <- optim(scl_guess, objfun, method="BFGS")
+    optrslt <- stats::optim(scl_guess, objfun, method="BFGS")
 
     ## Grab the bestx and besty values from the objective function's environment
     bestx <- environment(objfun)[['bestx']]

@@ -130,8 +130,8 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
     paccept <- sum(accept)/nsamp
     if(debug) {
         structure(
-            list(samples=samples, proposals=prop, proplp=proplp, samplp=samplp, ratio=ratio,
-                 prop_accepted=accept, accept=paccept, plast=current_samp, scale=scale),
+            list(samples=samples, samplp=samplp, accept=paccept, plast=current_samp, scale=scale,
+                 proposals=prop, proplp=proplp, ratio=ratio, prop_accepted=accept),
             class=c('metrosamp', 'list'))
     }
     else {

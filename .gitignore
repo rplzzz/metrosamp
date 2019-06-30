@@ -6,3 +6,7 @@
 # Emacs backup files
 *~
 
+## Mac cruft
+.DS_Store
+
+
