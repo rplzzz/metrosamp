@@ -4,6 +4,11 @@ context('Basic sampling functions')
 nvar <- 2
 nsamp <- 1000
 
+test_that('Illegal initial values throw an error', {
+    expect_error(expect_warning(metrosamp(log, -1, 100, 1, 1), 'NaNs produced'), 'Illegal p0 value')
+    expect_error(metrosamp(log, 0, 100, 1, 1), 'Illegal p0 value')
+})
+
 test_that('Unbatched sampling works.', {
     out <- metrosamp(normpost, rep(1, nvar) , 1000, 1, rep(1, nvar))
 

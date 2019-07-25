@@ -92,6 +92,11 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
     else {
         current_lp <- lp0
     }
+
+    if(!is.finite(current_lp)) {
+        stop('Illegal p0 value:  p0: ', p0, '  log-post: ', current_lp)
+    }
+
     for(i in 1:nsamp) {
         if(batchlen == 1) {
             newprop <- current_samp + proposal_step(scale)
