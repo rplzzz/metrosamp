@@ -2,6 +2,7 @@
 
 export(concat)
 export(cor2cov)
+export(getsamples)
 export(logrosen)
 export(metrosamp)
 export(neff)
