@@ -99,3 +99,60 @@ test_that('concatenating lists of metrosamp objects works', {
 
     expect_equal(mslc, msl)
 })
+
+test_that('sample extraction works', {
+    mk_test_ms <- function(vals, samplp, paccept=0, scale=numeric(0)) {
+        if(is.matrix(vals)) {
+            samples <- vals
+        }
+        else {
+            samples <- matrix(1, nrow=length(vals), ncol=3) * vals
+        }
+        if(length(scale)==0) {
+            scale <- rep(1, ncol(samples))
+        }
+        structure(
+            list(samples=samples, samplp=samplp, accept=paccept, plast=samples[nrow(samples),], scale=scale),
+            class=c('metrosamp','list'))
+    }
+
+    ## test single mc struct
+    mcruns1 <- mk_test_ms(c(1,2,3), c(-1,-2,-3), 1)
+
+    samps1 <- getsamples(mcruns1)
+    expected_samps <- matrix(rep(c(1,2,3), 3), ncol=3)
+    expect_is(samps1, 'matrix')
+    expect_equal(samps1, expected_samps)
+
+    samps1lp <- getsamples(mcruns1,includelp=TRUE)
+    expect_is(samps1lp, 'list')
+    expect_equal(samps1lp, list(samples=expected_samps, lp=c(-1,-2,-3)))
+
+    ## Passing a matrix or a list of matrices in should fail
+    expect_error(getsamples(mcruns1$samples), 'must be a metrosamp object')
+    expect_error(getsamples(list(mcruns1$samples, mcruns1$samples)), 'must be a metrosamp object')
+
+    ### test multiple mc struct.  Give each one 5 copies of the same sample
+    mcruns3 <- mapply(mk_test_ms, rep(c(1,2,3), rep(5,3)), rep(c(-1,-2,-3), rep(5,3)), SIMPLIFY=FALSE)
+    samps3 <- getsamples(mcruns3)
+    expected_samps <- matrix(rep(rep(c(1,2,3), rep(5,3)), 3), ncol=3)
+    expect_is(samps3, 'matrix')
+    expect_equal(samps3, expected_samps)
+
+    samps3lp <- getsamples(mcruns3, includelp=TRUE)
+    expect_is(samps3lp, 'list')
+    expect_equal(samps3lp, list(samples=expected_samps, lp=rep(c(-1,-2,-3), rep(5,3))))
+
+    ### test with thinning in effect
+    samps3thinlp <- getsamples(mcruns3, 3, TRUE)
+    expected_samps <- matrix(rep(c(1,2,3), 3), ncol=3)   # should get one from each chain
+    expect_is(samps3thinlp, 'list')
+    expect_equal(samps3thinlp, list(samples=expected_samps, lp=c(-1,-2,-3)))
+
+    ### different thinning factors
+    samps3thin5 <- getsamples(mcruns3, 5, TRUE)
+    expect_equal(samps3thin5,
+                 list(samples=samps3[c(3,6,9,12,15),], lp=samps3lp$lp[c(3,6,9,12,15)]))
+    samps3thin7 <- getsamples(mcruns3, 6)
+    expect_equal(samps3thin7, samps3[c(2,4,6,8,10,12),])
+})

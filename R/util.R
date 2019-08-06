@@ -141,3 +141,59 @@ concat_single <- function(ms1, ms2)
             class=c('metrosamp', 'list'))
     }
 }
+
+#' Extract matrix of samples from a \code{metrosamp} object
+#'
+#' Given a metrosamp object, or a list of \code{metrosamp} objects, extract the
+#' matrix of parameter samples.  Optionally, also extract the log-posterior
+#' values.
+#'
+#' If the input is a list of \code{metrosamp} objects, then their samples are
+#' merged into a single grand matrix of results.  Doing this discards the
+#' information about which samples came from which Markov chains.
+#'
+#' @param mcruns A \code{metrosamp} object or a list of \code{metrosamp} objects.
+#' @param thinto Total number of samples to thin the sample array to.  Many analysis
+#' operations scale as \eqn{O(N)} or \eqn{O(N \ln N)}, so thinning can speed these
+#' up pretty substantially, especially for runs with poor sampling efficiency.
+#' @param includelp If true, return the log-posterior values in a list with the sample
+#' matrix.
+#' @return If \code{includelp} is \code{FALSE}, a matrix of samples, otherwise, a list
+#' with the sample matrix and the vector of log-posterior values.
+#' @export
+getsamples <- function(mcruns, thinto=NULL, includelp=FALSE)
+{
+    if(inherits(mcruns, 'metrosamp')) {
+        samps <- mcruns$samples
+        if(includelp) {
+            lp <- mcruns$samplp
+        }
+    }
+    else {
+        ## presumably a list of metrosamp objects
+        if(!is.list(mcruns) || ! all(sapply(mcruns, inherits, what='metrosamp'))) {
+            stop('mcruns argument must be a metrosamp object or list of metrosamp objects')
+        }
+        samps <- do.call(rbind, lapply(mcruns, function(mco){mco$samples}))
+        if(includelp) {
+            lp <- do.call(c, lapply(mcruns, function(mco){mco$samplp}))
+        }
+    }
+
+    if(is.numeric(thinto) && thinto > 0) {
+        ntot <- nrow(samps)
+        fac <- floor(ntot / thinto)
+        keep <- seq(1,ntot) %% fac == 0
+        samps <- samps[keep,][1:thinto,]  # second indexing is for cases where thinto does not evenly divide ntot
+        if(includelp) {
+            lp <- lp[keep][1:thinto]
+        }
+    }
+
+    if(includelp) {
+        list(samples=samps, lp=lp)
+    }
+    else {
+        samps
+    }
+}
