@@ -128,6 +128,10 @@ test_that('sample extraction works', {
     expect_is(samps1lp, 'list')
     expect_equal(samps1lp, list(samples=expected_samps, lp=c(-1,-2,-3)))
 
+    ## Passing a matrix or a list of matrices in should fail
+    expect_error(getsamples(mcruns1$samples), 'must be a metrosamp object')
+    expect_error(getsamples(list(mcruns1$samples, mcruns1$samples)), 'must be a metrosamp object')
+
     ### test multiple mc struct.  Give each one 5 copies of the same sample
     mcruns3 <- mapply(mk_test_ms, rep(c(1,2,3), rep(5,3)), rep(c(-1,-2,-3), rep(5,3)), SIMPLIFY=FALSE)
     samps3 <- getsamples(mcruns3)
