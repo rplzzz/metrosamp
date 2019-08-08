@@ -5,6 +5,7 @@
 \alias{MAP}
 \alias{EV}
 \alias{CI}
+\alias{rsample}
 \title{Analysis functions for MCMC outputs}
 \usage{
 MAP(mcrslt, thin = NULL)
@@ -12,6 +13,8 @@ MAP(mcrslt, thin = NULL)
 EV(mcrslt, thin = NULL)
 
 CI(mcrslt, ci = 0.95, thin = NULL)
+
+rsample(mcrslt, N)
 }
 \arguments{
 \item{mcrslt}{A \code{metrosamp} object, or a list of metrosamp objects
@@ -21,6 +24,8 @@ representing multiple chains from the same inference.}
 analysis.  This can speed up analyses on large sample runs.}
 
 \item{ci}{The credible interval to produce (default: 95\%)}
+
+\item{N}{Number of samples to draw.}
 }
 \description{
 These functions produce summary statistics, such as expectation values or
@@ -33,5 +38,9 @@ credible intervals, for MCMC objects.
 \item \code{EV}: Expectation value for parameters
 
 \item \code{CI}: Equal-tailed credibile intervals for parameters
+
+\item \code{rsample}: Draw random samples from a set of Monte Carlo results
+
+Samples are drawn from the entire collection of Markov chains, \emph{with} replacement.
 }}
 

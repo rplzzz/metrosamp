@@ -39,3 +39,16 @@ CI <- function(mcrslt, ci=0.95, thin=NULL)
     q <- c(p, 1-p)
     t(apply(samps, 2, function(x){quantile(x, q)}))
 }
+
+#' @describeIn analysis-functions Draw random samples from a set of Monte Carlo results
+#'
+#' Samples are drawn from the entire collection of Markov chains, \emph{with} replacement.
+#'
+#' @param N Number of samples to draw.
+#' @export
+rsample <- function(mcrslt, N)
+{
+    samps <- getsamples(mcrslt)
+    idx <- sample(nrow(samps), N)
+    samps[idx,]
+}

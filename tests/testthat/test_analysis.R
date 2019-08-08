@@ -40,3 +40,10 @@ test_that('CI returns correct values', {
     colnames(mx_expected) <- c('2.5%', '97.5%')
     expect_equal(mx, mx_expected)
 })
+
+test_that('rsample returns an appropriately constructed matrix', {
+    samps <- rsample(msruns, 5)
+    expect_is(samps, 'matrix')
+    expect_equal(dim(samps), c(5,3))
+    expect_equal(colnames(samps), pn)
+})
