@@ -156,3 +156,37 @@ test_that('sample extraction works', {
     samps3thin7 <- getsamples(mcruns3, 6)
     expect_equal(samps3thin7, samps3[c(2,4,6,8,10,12),])
 })
+
+test_that('Lists of metrosamp objects can be converted to coda objects', {
+    ngen <- 100
+    p0 <- c(1,1)
+    scale <- c(0.25, 0.25)
+    set.seed(867-5309)
+
+    ms1 <- metrosamp(rosenbrock, p0, ngen, 1, scale)
+    ms2 <- metrosamp(rosenbrock, p0, ngen, 1, scale)
+
+    c1 <- metrosamp2coda(ms1)
+    c12 <- metrosamp2coda(list(ms1,ms2))
+
+    expect_s3_class(c1, 'mcmc')
+    expect_s3_class(c12, 'mcmc.list')
+
+    expect_equal(coda::niter(c1), ngen)
+    expect_equal(coda::niter(c12), ngen)
+
+    expect_equal(coda::nvar(c1), 2)
+    expect_equal(coda::nvar(c12), 2)
+
+    expect_equal(coda::nchain(c1), 1)
+    expect_equal(coda::nchain(c12), 2)
+
+    c1t <- metrosamp2coda(ms1, 25)
+    expect_s3_class(c1t, 'mcmc')
+    expect_equal(coda::niter(c1t), 25)
+
+    c12t <- metrosamp2coda(list(ms1,ms2), 25)
+    expect_s3_class(c12t, 'mcmc.list')
+    expect_equal(coda::niter(c12t), 25)
+    expect_equal(coda::nchain(c12t), 2)
+})

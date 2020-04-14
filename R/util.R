@@ -197,3 +197,49 @@ getsamples <- function(mcruns, thinto=NULL, includelp=FALSE)
         samps
     }
 }
+
+#' Convert a list of metrosamp structures to a \code{\link[coda]{mcmc.list}}
+#' structure.
+#'
+#' This conversion allows all of the analysis and diagnostic functions from the
+#' coda package to be applied to metrosamp results
+#'
+#' @param mslist A list of metrosamp structures
+#' @param size Size of the mcmc objects in output coda structure. The results will be
+#' thinned as necessary to get to this size.
+#' @export
+metrosamp2coda <- function(mslist, size=NA) {
+
+
+    if(inherits(mslist, 'metrosamp')) {
+        ## we got only a single metrosamp structure, so return a coda::mcmc object
+        if(is.na(size)) {
+            thin <- 1
+        }
+        else {
+            thin <- ceiling(nrow(mslist$samples) / size)
+        }
+
+        samps <- mslist$samples
+        idx <- seq(1,nrow(samps))
+        samps <- samps[idx %% thin == 0, ]
+        coda::mcmc(samps, thin=thin)
+    }
+    else {
+        if(is.na(size)) {
+            thin <- 1
+        }
+        else {
+            thin <- ceiling(nrow(mslist[[1]]$samples) / size)
+        }
+
+        coda::mcmc.list(
+            lapply(mslist, function(ms) {
+                samps <- ms$samples
+                idx <- seq(1,nrow(samps))
+                samps <- samps[idx %% thin == 0, ]
+                coda::mcmc(samps, thin=thin)
+            })
+        )
+    }
+}

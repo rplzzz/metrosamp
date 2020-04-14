@@ -4,8 +4,7 @@
 \alias{scltune}
 \title{Find a scale vector that produces a desired acceptance rate}
 \usage{
-scltune(lpost, p0, scl_guess = NULL, target_accept = 0.25,
-  nsamp = 100)
+scltune(lpost, p0, scl_guess = NULL, target_accept = 0.25, nsamp = 100)
 }
 \arguments{
 \item{lpost}{Log-posterior function}

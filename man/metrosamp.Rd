@@ -4,8 +4,7 @@
 \alias{metrosamp}
 \title{Perform Metropolis sampling with batch averaging}
 \usage{
-metrosamp(lpost, p0, nsamp, batchlen, scale = NULL, debug = FALSE,
-  lp0 = NA)
+metrosamp(lpost, p0, nsamp, batchlen, scale = NULL, debug = FALSE, lp0 = NA)
 }
 \arguments{
 \item{lpost}{Log-posterior function}
