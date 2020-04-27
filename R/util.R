@@ -57,6 +57,30 @@ neff <- function(mcmcrslt)
     }
     coda::effectiveSize(samps)
 }
+
+#' Get the acceptance rate for a set of MCMC results
+#'
+#' For a single metrosamp object this is just the \code{accept} member of the
+#' object.  For a list of metrosamp objects, we return the average acceptance
+#' rate, weighted by the number of samples in each Markov chain.
+#'
+#' @param mcmcrslt Results of an MCMC calculation.  Can be either a metrosamp
+#' object or a list of metrosamp objects.
+#' @export
+accrate <- function(mcmcrslt)
+{
+    if(inherits(mcmcrslt, 'metrosamp')) {
+        mcmcrslt$accept
+    }
+    else {
+        ## assume a list of metrosamp objects
+        faccept <- sapply(mcmcrslt, function(x){x$accept})
+        nsamp <- sapply(mcmcrslt, function(x){nrow(x$samples)})
+        naccept <- faccept*nsamp
+        sum(naccept)/sum(nsamp)
+    }
+}
+
 #' Convert a correlaiton matrix into a covariance matrix
 #'
 #' Given a correlation matrix an a vector of standard deviations for the individual

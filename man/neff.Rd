@@ -4,10 +4,10 @@
 \alias{neff}
 \title{Correct Markov chain sample count for autocorrelation.}
 \usage{
-neff(samps)
+neff(mcmcrslt)
 }
 \arguments{
-\item{samps}{Matrix of samples, with samples in rows and variables in columns}
+\item{mcmcrslt}{MCMC results.  See details.}
 }
 \value{
 Vector of N_e values, one for each variable
@@ -18,6 +18,13 @@ the effective number of samples is less than the actual number of samples
 collected.  This function computes the corrected value.
 }
 \details{
+The input can be any of:
+\itemize{
+\item{A matrix of samples, with samples in rows and variables in columns}
+\item{A metrosamp object}
+\item{A list of metrosamp objects}
+}
+
 This function is currently just a thin wrapper around
 \code{\link[coda]{effectiveSize}}.  As noted below, the method used in this
 calculation is not ideal, so eventually we will replace this with something

@@ -6,6 +6,15 @@ allcor <- rep(1, 100)
 somecor <- stats::arima.sim(n=100, list(ar=0.5))
 samps <- matrix(c(nocor, allcor, somecor), ncol=3)
 
+## Some metrosamp structures
+ngen <- 100
+p0 <- c(1,1)
+scale <- c(0.25, 0.25)
+mstest1 <- metrosamp(rosenbrock, p0, ngen, 1, scale)
+mstest2 <- metrosamp(rosenbrock, p0, ngen, 1, scale)
+mstest3 <- metrosamp(rosenbrock, p0, 2*ngen, 1, scale)  # 2x as many runs
+mstestlist <- list(mstest1, mstest2)   # don't include the long run by default
+
 test_that('Effective size calculation works', {
     ne <- neff(samps)
     expect_equivalent(ne[1], 100)
@@ -18,18 +27,18 @@ test_that('Effective size calculation works', {
     expect_lt(ne[3], 70)
 
     ## Test neff for metrosamp objects.
-    ngen <- 100
-    p0 <- c(1,1)
-    scale <- c(0.25, 0.25)
-
-    ## generate metrosamp runs with and without debugging
-    set.seed(867-5309)
-    ms1 <- metrosamp(rosenbrock, p0, ngen, 1, scale)
-    ms2 <- metrosamp(rosenbrock, p0, ngen, 1, scale)
-    expect_equal(neff(ms1), neff(ms1$samples))
-    expect_equal(neff(list(ms1,ms2)), neff(rbind(ms1$samples, ms2$samples)))
+    expect_equal(neff(mstest1), neff(mstest1$samples))
+    expect_equal(neff(mstestlist), neff(rbind(mstest1$samples, mstest2$samples)))
 })
 
+test_that('Acceptance rate works', {
+    expect_equal(accrate(mstest1), mstest1$accept)
+    expect_equal(accrate(mstestlist), 0.5*(mstest1$accept + mstest2$accept))
+
+    ## Check that weighting works
+    expect_equal(accrate(list(mstest1, mstest2, mstest3)),
+                 0.25*(mstest1$accept + mstest2$accept + 2*mstest3$accept))
+})
 
 test_that('cor2cov generates the correct covariance matrix', {
     cormat <- matrix(c(1.0, 0.5, -0.5, 0.5, 1.0, 0.0, -0.5, 0.0, 1.0), nrow=3)

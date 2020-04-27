@@ -3,6 +3,7 @@
 export(CI)
 export(EV)
 export(MAP)
+export(accrate)
 export(concat)
 export(cor2cov)
 export(getsamples)
