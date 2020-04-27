@@ -1,8 +1,8 @@
 Package: metrosamp
 Type: Package
 Title: Basic Metropolis Sampler for Markov Chain Monte Carlo
-Version: 0.8.0
-Authors@R: person("Robert", "Link", email = "robert.link@pnnl.gov", role = c("aut", "cre", "ard", "lyr"))
+Version: 0.8.1
+Authors@R: person("Robert", "Link", email = "rl8z@virginia.edu", role = c("aut", "cre", "ard", "lyr"))
 Description: Run basic Markov Chain Monte Carlo using the Metropolis algorithm.
 Depends: R (>= 3.3.0)
 License: GPL-2

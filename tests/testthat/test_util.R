@@ -16,6 +16,18 @@ test_that('Effective size calculation works', {
     ## approximately 42.
     expect_gt(ne[3], 30)
     expect_lt(ne[3], 70)
+
+    ## Test neff for metrosamp objects.
+    ngen <- 100
+    p0 <- c(1,1)
+    scale <- c(0.25, 0.25)
+
+    ## generate metrosamp runs with and without debugging
+    set.seed(867-5309)
+    ms1 <- metrosamp(rosenbrock, p0, ngen, 1, scale)
+    ms2 <- metrosamp(rosenbrock, p0, ngen, 1, scale)
+    expect_equal(neff(ms1), neff(ms1$samples))
+    expect_equal(neff(list(ms1,ms2)), neff(rbind(ms1$samples, ms2$samples)))
 })
 
 

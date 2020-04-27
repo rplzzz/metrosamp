@@ -6,6 +6,13 @@
 #' the effective number of samples is less than the actual number of samples
 #' collected.  This function computes the corrected value.
 #'
+#' The input can be any of:
+#' \itemize{
+#' \item{A matrix of samples, with samples in rows and variables in columns}
+#' \item{A metrosamp object}
+#' \item{A list of metrosamp objects}
+#' }
+#'
 #' This function is currently just a thin wrapper around
 #' \code{\link[coda]{effectiveSize}}.  As noted below, the method used in this
 #' calculation is not ideal, so eventually we will replace this with something
@@ -36,14 +43,20 @@
 #' mostly intended for light-duty work, but we should consider putting in the
 #' more sophisticated version at some point.
 #'
-#' @param samps Matrix of samples, with samples in rows and variables in columns
+#' @param mcmcrslt MCMC results.  See details.
 #' @return Vector of N_e values, one for each variable
 #' @export
-neff <- function(samps)
+neff <- function(mcmcrslt)
 {
+    if(is.matrix(mcmcrslt)) {
+        samps <- mcmcrslt
+    }
+    else {
+        ## Assume we're dealing with a metrosamp object or a list of same
+        samps <- getsamples(mcmcrslt)
+    }
     coda::effectiveSize(samps)
 }
-
 #' Convert a correlaiton matrix into a covariance matrix
 #'
 #' Given a correlation matrix an a vector of standard deviations for the individual
