@@ -37,7 +37,7 @@ CI <- function(mcrslt, ci=0.95, thin=NULL)
     samps <- getsamples(mcrslt, thinto=thin)
     p <- (1-ci)/2
     q <- c(p, 1-p)
-    t(apply(samps, 2, function(x){quantile(x, q)}))
+    t(apply(samps, 2, function(x){stats::quantile(x, q)}))
 }
 
 #' @describeIn analysis-functions Draw random samples from a set of Monte Carlo results
