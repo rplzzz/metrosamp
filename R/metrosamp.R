@@ -28,6 +28,7 @@
 #' \item{proplp}{Log-posterior for the proposals.  The same notes apply as to
 #' the \code{proposals} entry.}
 #' \item{prop_accepted}{Flag indicating whether each proposal was accepted.}
+#' \item{err}{Flag indicating whether an error was caught for the proposal}
 #' }
 #'
 #' A run can be continued by passing the \code{metrosamp} structure from the
@@ -39,12 +40,11 @@
 #' @section To Do:
 #'
 #' \itemize{
+#' \item{Fix the batch capability, which is currently wrong.}
 #' \item{Store the last log-posterior value, so continuation runs don't have to
 #' recompute it.}
 #' \item{Add code to compute MCSE.}
-#' \item{Add code to compute Neff.}
 #' \item{Add option to run functions on MC samples.}
-#' \item{Allow covariance matrix for scale parameter.}
 #' }
 #'
 #' @param lpost Log-posterior function
@@ -84,6 +84,7 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
     samplp <- as.numeric(rep(NA, nsamp))
     ratio <- as.numeric(rep(NA, nsamp))
     accept <- rep(0, nsamp)
+    errflag <- rep(FALSE, nsamp)
 
     current_samp <- p0
     if(is.na(lp0)) {
@@ -101,7 +102,14 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
         if(batchlen == 1) {
             newprop <- current_samp + proposal_step(scale)
             prop[i,] <- newprop
-            proplp[i] <- lpost(newprop)
+            proplp[i] <- tryCatch(lpost(newprop),error = err)
+            if(!is.finite(proplp[i])) {
+                if(is.na(proplp[i])) {
+                    ## There was an error.  Record it, and set the proposal lp to -Inf
+                    errflag[i] <- TRUE
+                    proplp[i] <- -Inf
+                }
+            }
             ratio[i] <- exp(proplp[i] - current_lp)
             if(runif(1) < ratio[i]) {
                 ## Accept proposal params
@@ -117,6 +125,7 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
         }
         else {
             ## sample a batch
+            stop('Batch sampling is not properly implemented.  Do not use')
             message('batch: ', i)
             batch <- metrosamp(lpost, current_samp, batchlen, 1, scale, debug, current_lp)
             ## set this iteration's result using the result of the batch
@@ -136,7 +145,7 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
     if(debug) {
         structure(
             list(samples=samples, samplp=samplp, accept=paccept, plast=current_samp, scale=scale,
-                 proposals=prop, proplp=proplp, ratio=ratio, prop_accepted=accept),
+                 proposals=prop, proplp=proplp, ratio=ratio, prop_accepted=accept, err=errflag),
             class=c('metrosamp', 'list'))
     }
     else {
@@ -144,6 +153,12 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
             list(samples=samples, samplp=samplp, accept=paccept, plast=current_samp, scale=scale),
             class=c('metrosamp','list'))
     }
+}
+
+## Error handler
+err <- function(e) {
+    message(conditionMessage(e))
+    NA_real_
 }
 
 ## proposal generation function

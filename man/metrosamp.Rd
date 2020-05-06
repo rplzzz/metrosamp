@@ -57,6 +57,7 @@ length of 1.
 \item{proplp}{Log-posterior for the proposals.  The same notes apply as to
 the \code{proposals} entry.}
 \item{prop_accepted}{Flag indicating whether each proposal was accepted.}
+\item{err}{Flag indicating whether an error was caught for the proposal}
 }
 
 A run can be continued by passing the \code{metrosamp} structure from the
@@ -69,12 +70,11 @@ override the scale parameter stored in the old structure.
 
 
 \itemize{
+\item{Fix the batch capability, which is currently wrong.}
 \item{Store the last log-posterior value, so continuation runs don't have to
 recompute it.}
 \item{Add code to compute MCSE.}
-\item{Add code to compute Neff.}
 \item{Add option to run functions on MC samples.}
-\item{Allow covariance matrix for scale parameter.}
 }
 }
 

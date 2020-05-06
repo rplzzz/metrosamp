@@ -167,9 +167,11 @@ concat_single <- function(ms1, ms2)
         proplp <- c(ms1$proplp, ms2$proplp)
         ratio <- c(ms1$ratio, ms2$ratio)
         prop_accept <- c(ms1$prop_accepted, ms2$prop_accepted)
+        err <- c(ms1$err, ms2$err)
         structure(
             list(samples=samps, samplp=samplp, accept=paccept, plast=plast, scale=scale,
-                 proposals=props, proplp=proplp, ratio=ratio, prop_accepted=prop_accept),
+                 proposals=props, proplp=proplp, ratio=ratio, prop_accepted=prop_accept,
+                 err=err),
             class=c('metrosamp', 'list'))
     }
     else {
