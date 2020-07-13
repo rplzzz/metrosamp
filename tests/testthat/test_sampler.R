@@ -57,6 +57,29 @@ test_that('Debug information is added when requested.', {
 
 })
 
+test_that('Checkpoints are written as needed', {
+    slowpost <- function(x) {
+        Sys.sleep(1)
+        normpost(x)
+    }
+
+    ## No file written, but messages still written
+    fivesec <- as.difftime(5, units='secs')
+    expect_message({out <- metrosamp(slowpost, rep(1,nvar), 10, 1, rep(1,nvar),
+                                     ckpt_freq=fivesec)},
+                   regexp='iteration')
+    expect_s3_class(out,'metrosamp')
+
+    filename <- tempfile()
+    expect_message({out <- metrosamp(slowpost, rep(1, nvar), 10, 1, rep(1,nvar),
+                                     ckpt_name = filename, ckpt_freq=fivesec)},
+                   regexp='iteration')
+    expect_s3_class(out, 'metrosamp')
+    expect_true(file.exists(filename))
+    ckptout <- readRDS(filename)
+    expect_s3_class(ckptout, 'metrosamp')
+    unlink(filename)
+})
 
 test_that('Batched sampling works.', {
     skip('Batched sampling is not implemented.')

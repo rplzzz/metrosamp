@@ -56,12 +56,17 @@
 #' normal deviates to get the proposal step.  Optional if a \code{metrosamp}
 #' structure was supplied for \code{p0}; required otherwise.
 #' @param debug Flag to turn on additional debugging information.
+#' @param ckpt_name Name of checkpoint files.  Set to \code{NULL} to disable.
+#' @param ckpt_freq Frequency to write checkpoint values.  Either a \code{difftime}
+#' value, or a numeric value, which will be interpreted as a time in hours. Default
+#' is to write a checkpoint every hour.
 #' @param lp0 Log-posterior for the starting parameters (p0).  If not supplied
-#'   it will be calculated automatically.
+#' it will be calculated automatically.
 #' @return A \code{metrosamp} structure of Monte Carlo outputs (described in Details).
 #' @importFrom stats runif rnorm
 #' @export
-metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=NA)
+metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE,
+                      ckpt_name=NULL, ckpt_freq=1, lp0=NA)
 {
 
     if(inherits(p0, 'metrosamp')) {
@@ -96,6 +101,46 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
 
     if(!is.finite(current_lp)) {
         stop('Illegal p0 value:  p0: ', p0, '  log-post: ', current_lp)
+    }
+
+    ### Set up checkpointing
+    if(is.null(ckpt_name)) {
+        do_ckpt <- FALSE
+    }
+    else {
+        do_ckpt <- TRUE
+    }
+
+    ## Even if we're not doing checkpoints, we write progress messages at intervals
+    ## given by the checkpoint frequency
+    if(is.numeric(ckpt_freq)) {
+        ckpt_freq <- as.difftime(ckpt_freq, units='hours')
+    }
+    else if(!inherits(ckpt_freq, 'difftime')) {
+        stop('Invalid value for ckpt_freq:  ', ckpt_freq)
+    }
+    ## record start time
+    last_ckpt <- Sys.time()
+
+
+
+    ### Ouput function
+    metrosamp_struct <- function(i=nsamp) {
+        paccept <- sum(accept[1:i])/i
+        if(debug) {
+            structure(
+                list(samples=samples[1:i, ], samplp=samplp[1:i],
+                     accept=paccept, plast=current_samp, scale=scale,
+                     proposals=prop[1:i, ], proplp=proplp[1:i], ratio=ratio[1:i],
+                     prop_accepted=accept[1:i], err=errflag[1:i]),
+                class=c('metrosamp', 'list'))
+        }
+        else {
+            structure(
+                list(samples=samples[1:i, ], samplp=samplp[1:i],
+                     accept=paccept, plast=current_samp, scale=scale),
+                class=c('metrosamp','list'))
+        }
     }
 
     for(i in 1:nsamp) {
@@ -139,20 +184,21 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE, lp0=N
                 ratio[i] <- batch$ratio[batchlen]
             }
         }
+
+        ## Write progress message and checkpoint if necessary
+        tm <- Sys.time()
+        runtime <- tm - last_ckpt
+        if(runtime >= ckpt_freq) {
+            message('time: ', runtime,'  iteration: ', i)
+            last_ckpt <- tm
+            if(do_ckpt) {
+                saveRDS(metrosamp_struct(i), ckpt_name)
+            }
+        }
+
     }
 
-    paccept <- sum(accept)/nsamp
-    if(debug) {
-        structure(
-            list(samples=samples, samplp=samplp, accept=paccept, plast=current_samp, scale=scale,
-                 proposals=prop, proplp=proplp, ratio=ratio, prop_accepted=accept, err=errflag),
-            class=c('metrosamp', 'list'))
-    }
-    else {
-        structure(
-            list(samples=samples, samplp=samplp, accept=paccept, plast=current_samp, scale=scale),
-            class=c('metrosamp','list'))
-    }
+    metrosamp_struct()
 }
 
 ## Error handler
