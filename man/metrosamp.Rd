@@ -4,7 +4,17 @@
 \alias{metrosamp}
 \title{Perform Metropolis sampling with batch averaging}
 \usage{
-metrosamp(lpost, p0, nsamp, batchlen, scale = NULL, debug = FALSE, lp0 = NA)
+metrosamp(
+  lpost,
+  p0,
+  nsamp,
+  batchlen,
+  scale = NULL,
+  debug = FALSE,
+  ckpt_name = NULL,
+  ckpt_freq = 1,
+  lp0 = NA
+)
 }
 \arguments{
 \item{lpost}{Log-posterior function}
@@ -21,6 +31,12 @@ normal deviates to get the proposal step.  Optional if a \code{metrosamp}
 structure was supplied for \code{p0}; required otherwise.}
 
 \item{debug}{Flag to turn on additional debugging information.}
+
+\item{ckpt_name}{Name of checkpoint files.  Set to \code{NULL} to disable.}
+
+\item{ckpt_freq}{Frequency to write checkpoint values.  Either a \code{difftime}
+value, or a numeric value, which will be interpreted as a time in hours. Default
+is to write a checkpoint every hour.}
 
 \item{lp0}{Log-posterior for the starting parameters (p0).  If not supplied
 it will be calculated automatically.}
