@@ -120,8 +120,7 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE,
         stop('Invalid value for ckpt_freq:  ', ckpt_freq)
     }
     ## record start time
-    last_ckpt <- Sys.time()
-
+    last_ckpt <- start_time <- Sys.time()
 
 
     ### Ouput function
@@ -189,7 +188,7 @@ metrosamp <- function(lpost, p0, nsamp, batchlen, scale=NULL, debug=FALSE,
         tm <- Sys.time()
         runtime <- tm - last_ckpt
         if(runtime >= ckpt_freq) {
-            message('time: ', runtime,'  iteration: ', i)
+            message('time: ', tm-start_time,'  iteration: ', i)
             last_ckpt <- tm
             if(do_ckpt) {
                 saveRDS(metrosamp_struct(i), ckpt_name)
