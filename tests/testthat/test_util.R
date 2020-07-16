@@ -211,3 +211,30 @@ test_that('Lists of metrosamp objects can be converted to coda objects', {
     expect_equal(coda::niter(c12t), 25)
     expect_equal(coda::nchain(c12t), 2)
 })
+
+test_that('recover_ckpt works', {
+    ngen1 <- 100
+    ngen2 <- 200
+    p01 <- c(1,1)
+    p02 <- c(1.5, 1.5)
+    scale <- c(0.25, 0.25)
+    set.seed(867-5309)
+
+    ms1 <- metrosamp(rosenbrock, p01, ngen1, 1, scale, debug=TRUE)
+    ms2 <- metrosamp(rosenbrock, p02, ngen2, 1, scale, debug=TRUE)
+
+    mclist <- list(ms1, ms2)
+
+    expect_error(metrosamp2coda(mclist), regexp='Different start, end or thin values')
+
+    mclistfix <- recover_ckpt(mclist)
+    codafix <- metrosamp2coda(mclistfix)
+    sampsfix <- getsamples(mclistfix)
+    expect_equal(nrow(sampsfix), 2*ngen1)
+
+    ## ms1 should be essentially unchanged
+    expect_equal(mclistfix[[1]], mclist[[1]])
+
+    ## ms2 should have the same final value.
+    expect_equal(mclist[[2]]$plast, mclistfix[[2]]$plast)
+})

@@ -282,3 +282,56 @@ metrosamp2coda <- function(mslist, size=NA) {
         )
     }
 }
+
+#' Recover data read in from checkpoint files.
+#'
+#' Format data from checkpoint files into a valid MCMC list.
+#'
+#' Many of the functions in the \code{coda} package require all of the Markov
+#' chains to have the same number of samples, so we trim all of the chains to
+#' the number of samples in the shortest chain.  Chains are trimmed from the
+#' beginning, so that
+#'
+#' This function is safe to run on data read from final MCMC output files.  In
+#' such cases it will return the input data unmodified.
+#'
+#' @param mclist List of metrosamp objects.
+#' @export
+recover_ckpt <- function(mclist)
+{
+    nsamps <- sapply(mclist, function(x){nrow(x$samples)})
+    N <- min(nsamps)
+    if(all(nsamps == N)) {
+        ## nothing to do; return the structures unmodified
+        return(mclist)
+    }
+
+    lapply(seq_along(mclist),
+           function(i) {
+               mcobj <- mclist[[i]]
+               end <- nrow(mcobj$samples)
+               strt <- end - N + 1
+               mcobj$samples <- mcobj$samples[strt:end,]
+               mcobj$samplp <- mcobj$samplp[strt:end]
+               if('proposals' %in% names(mcobj)) {
+                   ## trim the debug information too
+                   mcobj$proposals <- mcobj$proposals[strt:end,]
+                   mcobj$proplp <- mcobj$proplp[strt:end]
+                   mcobj$ratio <- mcobj$ratio[strt:end]
+                   mcobj$prop_accepted <- mcobj$prop_accepted[strt:end]
+                   mcobj$err <- mcobj$err[strt:end]
+                   ## recalculate the fraction of proposals accepted
+                   mcobj$accept <- sum(mcobj$prop_accepted) / length(mcobj$prop_accepted)
+               }
+               else {
+                   ## Without the debug we don't have enough information to
+                   ## calculate the acceptance fraction, but if we assume that
+                   ## each time the log-probability changes we accepted, and
+                   ## each time it doesn't we rejected, then we can get close
+                   ## enough.
+                   naccept <- length(rle(mcobj$samplp)[[1]])
+                   mcobj$accept <- naccept / length(mcobj$samplp)
+               }
+               mcobj
+           })
+}
