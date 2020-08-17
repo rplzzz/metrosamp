@@ -176,6 +176,11 @@ test_that('sample extraction works', {
                  list(samples=samps3[c(3,6,9,12,15),], lp=samps3lp$lp[c(3,6,9,12,15)]))
     samps3thin7 <- getsamples(mcruns3, 6)
     expect_equal(samps3thin7, samps3[c(2,4,6,8,10,12),])
+
+    ### ensure that when you get only one sample you still get a matrix
+    samps3thin1 <- getsamples(mcruns3, 1)
+    expect_is(samps3thin1, 'matrix')
+    expect_equal(nrow(samps3thin1), 1)
 })
 
 test_that('Lists of metrosamp objects can be converted to coda objects', {

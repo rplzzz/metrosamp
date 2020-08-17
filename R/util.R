@@ -221,11 +221,12 @@ getsamples <- function(mcruns, thinto=NULL, includelp=FALSE)
 
     if(is.numeric(thinto) && thinto > 0) {
         ntot <- nrow(samps)
-        fac <- floor(ntot / thinto)
-        keep <- seq(1,ntot) %% fac == 0
-        samps <- samps[keep,][1:thinto,]  # second indexing is for cases where thinto does not evenly divide ntot
+        i1 <- floor(ntot / thinto)
+        i2 <- ntot - ntot%%thinto
+        keep <- round(seq(i1, i2, length.out=thinto))
+        samps <- samps[keep, , drop=FALSE]
         if(includelp) {
-            lp <- lp[keep][1:thinto]
+            lp <- lp[keep]
         }
     }
 
